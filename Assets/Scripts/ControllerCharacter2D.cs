@@ -5,22 +5,27 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 public class ControllerCharacter2D : MonoBehaviour
 {
+    [SerializeField] Animator animator;
+    [SerializeField] SpriteRenderer spriteRenderer;
     [SerializeField] float speed;
     [SerializeField] float turnRate;
     [SerializeField] float jumpHeight;
+    [SerializeField] float doubleJumpHeight;
     [SerializeField] float hitForce;
     [SerializeField, Range(1, 5)] float fallRateMultiplier; 
     [SerializeField, Range(1, 5)] float lowJumpRateMultiplier;
-    [SerializeField] float doubleJumpHeight;
     [Header("Ground")]
     [SerializeField] Transform groundTransform;
     [SerializeField] LayerMask groundLayerMask;
 
     Rigidbody2D rb;
+    //SpriteRenderer spriteRenderer;  
     Vector2 velocity = Vector2.zero;
+    bool faceRight = true;
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        //spriteRenderer = GetComponent<SpriteRenderer>();    
     }
     void Update()
     {
@@ -40,6 +45,7 @@ public class ControllerCharacter2D : MonoBehaviour
             {
                 velocity.y += Mathf.Sqrt(jumpHeight * -2 * Physics.gravity.y);
                 StartCoroutine(DoubleJump(doubleJumpHeight));
+                animator.SetTrigger("Jump");
             }
         }
 
@@ -51,7 +57,12 @@ public class ControllerCharacter2D : MonoBehaviour
         velocity.y += Physics.gravity.y * Time.deltaTime;
         // move character
         rb.velocity = velocity;
-        // rotate character to face direction of movement (velocity)
+        // flip character to face direction of movement (velocity)
+        if (velocity.x > 0 && !faceRight) Flip();
+        if (velocity.x < 0 && faceRight) Flip();
+
+        // Update Animator
+        animator.SetFloat("Speed", Mathf.Abs(velocity.x));
         
     }
 
@@ -70,5 +81,11 @@ public class ControllerCharacter2D : MonoBehaviour
             }
             yield return null;
         }
+    }
+
+    private void Flip()
+    {
+        faceRight = !faceRight;
+        spriteRenderer.flipX = !faceRight;
     }
 }
